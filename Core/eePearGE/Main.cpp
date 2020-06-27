@@ -1,50 +1,87 @@
 #include <iostream>
-#include <SDL.h>
+#include <chrono>
+#include "WindowManager.h"
 
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
+using namespace std::chrono_literals;
+// we use a fixed timestep of 1 / (60 fps) = 16 milliseconds
+constexpr std::chrono::nanoseconds timestep(16ms);
+
+std::unique_ptr<WindowManager*> m_pwindowManager = std::make_unique<WindowManager*>(new WindowManager(3));
+
+struct game_state
+{
+	// this contains the state of your game, such as positions and velocities
+};
+
+bool handle_events()
+{
+	 //Handle events on queue
+	SDL_Event e;
+	while (SDL_PollEvent(&e) != 0)
+	{
+		//User requests quit
+		if (e.type == SDL_QUIT)
+		{
+			return true; // true if the user wants to quit the game
+		}
+	}
+
+	return false; 
+}
+
+void update(game_state*)
+{
+	(*m_pwindowManager)->UpdateAllWindows();
+}
+
+void render(game_state const&)
+{
+	(*m_pwindowManager)->RenderAllWindows();
+}
+
+game_state interpolate(game_state const& current, game_state const& previous, float alpha)
+{
+	game_state interpolated_state;
+
+	// interpolate between previous and current by alpha here
+
+	return interpolated_state;
+}
 
 int main(int argc, char* args[])
 {
-	//The window we'll be rendering to
-	SDL_Window* window = NULL;
+	using clock = std::chrono::high_resolution_clock;
 
-	//The surface contained by the window
-	SDL_Surface* screenSurface = NULL;
+	std::chrono::nanoseconds lag(0ns);
+	auto time_start = clock::now();
+	bool quit_game = false;
 
-	//Initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+	game_state current_state;
+	game_state previous_state;
+
+	while (!quit_game) 
 	{
-		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
-	}
-	else
-	{
-		//Create window
-		window = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-		if (window == NULL)
+		auto delta_time = clock::now() - time_start;
+		time_start = clock::now();
+		lag += std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time);
+
+		quit_game = handle_events();
+
+		// update game logic as lag permits
+		while (lag >= timestep) 
 		{
-			printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+			lag -= timestep;
+
+			previous_state = current_state;
+			update(&current_state); // update at a fixed rate each time
 		}
-		else
-		{
-			//Get window surface
-			screenSurface = SDL_GetWindowSurface(window);
 
-			//Fill the surface white
-			SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));
+		// calculate how close or far we are from the next timestep
+		auto alpha = (float)lag.count() / timestep.count();
+		auto interpolated_state = interpolate(current_state, previous_state, alpha);
 
-			//Update the surface
-			SDL_UpdateWindowSurface(window);
-
-			//Wait two seconds
-			SDL_Delay(2000);
-		}
+		render(interpolated_state);
 	}
-	//Destroy window
-	SDL_DestroyWindow(window);
-
-	//Quit SDL subsystems
-	SDL_Quit();
 
 	return 0;
 }
