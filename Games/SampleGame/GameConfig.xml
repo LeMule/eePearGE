@@ -1,0 +1,5 @@
+<GameConfig>
+	<GameName>SampleGame</GameName>
+	<GameID>1</GameID>
+	<ScreenCount>2</ScreenCount>
+</GameConfig>
