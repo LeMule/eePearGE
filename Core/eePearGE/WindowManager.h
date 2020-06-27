@@ -9,6 +9,7 @@ const int SCREEN_HEIGHT = 480;
 class WindowConfig;
 typedef std::shared_ptr<SDL_Window*> WindowPtr;
 typedef std::shared_ptr<SDL_Renderer*> RendererPtr;
+
 struct RenderPair
 {
 	WindowPtr _window;

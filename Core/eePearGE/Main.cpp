@@ -1,12 +1,11 @@
 #include <iostream>
 #include <chrono>
-#include "WindowManager.h"
+#include "GameManager.h"
 
 using namespace std::chrono_literals;
 // we use a fixed timestep of 1 / (60 fps) = 16 milliseconds
 constexpr std::chrono::nanoseconds timestep(16ms);
-
-std::unique_ptr<WindowManager*> m_pwindowManager = std::make_unique<WindowManager*>(new WindowManager(3));
+std::unique_ptr<GameManager*> pGameManager;
 
 struct game_state
 {
@@ -31,12 +30,12 @@ bool handle_events()
 
 void update(game_state*)
 {
-	(*m_pwindowManager)->UpdateAllWindows();
+	(*(*pGameManager)->GetWindowManager())->UpdateAllWindows();
 }
 
 void render(game_state const&)
 {
-	(*m_pwindowManager)->RenderAllWindows();
+	(*(*pGameManager)->GetWindowManager())->RenderAllWindows();
 }
 
 game_state interpolate(game_state const& current, game_state const& previous, float alpha)
@@ -58,6 +57,9 @@ int main(int argc, char* args[])
 
 	game_state current_state;
 	game_state previous_state;
+
+	pGameManager = std::make_unique<GameManager*>(new GameManager());
+	(*pGameManager)->LoadGames();
 
 	while (!quit_game) 
 	{
