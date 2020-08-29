@@ -1,0 +1,8 @@
+<CoreConfig>
+	<Vendors>
+		<!-- name = Vendor folder name -->
+		<!-- multigame = Needs to launch in game chooser mode -->
+		<!-- name = For release builds, deep persist settings to remove XML configs from final product. -->
+		<Vendor name="PearTreeGaming" multigame="true" standalone="true"/>
+	</Vendors>
+</CoreConfig>
