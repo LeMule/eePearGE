@@ -5,7 +5,7 @@
 using namespace eePearGE;
 using namespace std::chrono_literals;
 // we use a fixed timestep of 1 / (60 fps) = 16 milliseconds
-constexpr std::chrono::nanoseconds timestep(16ms);
+constexpr std::chrono::nanoseconds timestep(100ms);
 std::unique_ptr<GameManager*> pGameManager;
 
 struct game_state
@@ -31,11 +31,11 @@ bool handle_events()
 
 void update(game_state*)
 {
-	(*(*pGameManager)->GetWindowManager())->UpdateAllWindows();
 }
 
 void render(game_state const&)
 {
+	(*(*pGameManager)->GetWindowManager())->UpdateAllWindows();
 	(*(*pGameManager)->GetWindowManager())->RenderAllWindows();
 }
 
@@ -52,8 +52,9 @@ int main(int argc, char* args[])
 {
 	using clock = std::chrono::high_resolution_clock;
 
-	std::chrono::nanoseconds lag(0ns);
-	auto time_start = clock::now();
+	std::chrono::nanoseconds frame(0ms);
+	std::chrono::nanoseconds frame_dur(33ms);
+	auto time_since_last_frame = clock::now();
 	bool quit_game = false;
 
 	game_state current_state;
@@ -64,23 +65,22 @@ int main(int argc, char* args[])
 
 	while (!quit_game) 
 	{
-		auto delta_time = clock::now() - time_start;
-		time_start = clock::now();
-		lag += std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time);
-
-		quit_game = handle_events();
-
-		// update game logic as lag permits
-		while (lag >= timestep) 
+		do 
 		{
-			lag -= timestep;
+			auto delta_time = clock::now() - time_since_last_frame;
+			time_since_last_frame = clock::now();
+			quit_game = handle_events();
+
+			frame += std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time);
 
 			previous_state = current_state;
-			update(&current_state); // update at a fixed rate each time
-		}
+			update(&current_state);
+		} while (frame < timestep);
 
 		// calculate how close or far we are from the next timestep
-		auto alpha = (float)lag.count() / timestep.count();
+		auto alpha = (float)frame.count() / timestep.count();
+
+		frame = 0ms;
 		auto interpolated_state = interpolate(current_state, previous_state, alpha);
 
 		render(interpolated_state);
