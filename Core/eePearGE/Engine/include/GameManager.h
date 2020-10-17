@@ -1,33 +1,36 @@
-#pragma once
+#ifndef _EEPEARGE_GAMEMANAGER_H_
+#define _EEPEARGE_GAMEMANAGER_H_
+
+#include <map>
 #include <vector>
-#include "ConfigurationManager.h"
+#include "Game.h"
 #include "WindowManager.h"
 
 namespace eePearGE
 {
-	typedef std::shared_ptr<WindowManager*> WindowManagerPtr;
-	typedef std::shared_ptr<ConfigurationManager*> ConfigurationManagerPtr;
-
-	class Game;
-	typedef std::shared_ptr<Game*> GamePtr;
-	typedef std::vector<GamePtr> GameCatalog;
-
 	class GameManager
 	{
 	public:
-		GameManager(int numScreens)
+		GameManager(uint8_t numScreens = 0, /* Eh? Maybe we're making a console-output-only game...? */
+				    EventManagerPtr pEvtMngr = 0)
+			:m_pEvtMngr(pEvtMngr)
 		{
-			m_pwindowManager = std::make_shared<WindowManager*>(new WindowManager(numScreens));
-			m_pConfigurationManager = std::make_shared<ConfigurationManager*>(new ConfigurationManager());
+			m_pwindowManager = new WindowManager(numScreens);
 		}
 
-		WindowManagerPtr GetWindowManager() { return m_pwindowManager; }
-		ConfigurationManagerPtr GetConfigManager() { return m_pConfigurationManager; }
+		WindowManager* GetWindowManager() { return m_pwindowManager; }
 
 		void LoadGames();
+		void LoadGame(std::string gameName = "");
+
+		Game* GetGame() { return m_pLoadedGame; }
 
 	private:
-		WindowManagerPtr m_pwindowManager;
-		ConfigurationManagerPtr m_pConfigurationManager;
+		std::map<std::string, Game*> m_LoadedGames;
+		Game* m_pLoadedGame;
+		WindowManager* m_pwindowManager;
+		EventManagerPtr m_pEvtMngr;
 	};
 }
+
+#endif

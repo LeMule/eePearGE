@@ -1,8 +1,7 @@
 #include <iostream>
 #include <chrono>
+#include <xhash>
 #include "GameManager.h"
-
-//Hello WebHooks :)
 
 using namespace eePearGE;
 using namespace std::chrono_literals;
@@ -15,7 +14,7 @@ struct game_state
 	// this contains the state of your game, such as positions and velocities
 };
 
-bool handle_events()
+bool handle_events(EventManagerPtr evtPtr)
 {
 	 //Handle events on queue
 	SDL_Event e;
@@ -26,19 +25,38 @@ bool handle_events()
 		{
 			return true; // true if the user wants to quit the game
 		}
+		else if (e.type == SDL_KEYDOWN)
+		{
+			switch (e.key.keysym.sym)
+			{
+			case SDL_KeyCode::SDLK_UP:
+				evtPtr->QueueEvent("Up");
+				break;
+			case SDL_KeyCode::SDLK_DOWN:
+				evtPtr->QueueEvent("Down");
+				break;
+			case SDL_KeyCode::SDLK_LEFT:
+				evtPtr->QueueEvent("Left");
+				break;
+			case SDL_KeyCode::SDLK_RIGHT:
+				evtPtr->QueueEvent("Right");
+				break;
+			}
+		}
 	}
-
 	return false; 
 }
 
-void update(game_state*)
+void update(game_state*, EventManagerPtr evtPtr)
 {
+	//Pump a queue'd event first so it propagates pre-Update.
+	evtPtr->Pump();
+	(*pGameManager)->GetWindowManager()->UpdateAllWindows((*pGameManager)->GetGame());
 }
 
 void render(game_state const&)
 {
-	(*(*pGameManager)->GetWindowManager())->UpdateAllWindows();
-	(*(*pGameManager)->GetWindowManager())->RenderAllWindows();
+	(*pGameManager)->GetWindowManager()->RenderAllWindows((*pGameManager)->GetGame());
 }
 
 game_state interpolate(game_state const& current, game_state const& previous, float alpha)
@@ -62,8 +80,10 @@ int main(int argc, char* args[])
 	game_state current_state;
 	game_state previous_state;
 
-	pGameManager = std::make_unique<GameManager*>(new GameManager(1));
+	EventManagerPtr evtMngr = std::shared_ptr<WordEventManager>(new WordEventManager());
+	pGameManager = std::make_unique<GameManager*>(new GameManager(1, evtMngr));
 	(*pGameManager)->LoadGames();
+	(*pGameManager)->LoadGame("SampleGame");
 
 	while (!quit_game) 
 	{
@@ -71,12 +91,13 @@ int main(int argc, char* args[])
 		{
 			auto delta_time = clock::now() - time_since_last_frame;
 			time_since_last_frame = clock::now();
-			quit_game = handle_events();
+			quit_game = handle_events(evtMngr);
 
 			frame += std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time);
 
 			previous_state = current_state;
-			update(&current_state);
+			update(&current_state, evtMngr);
+
 		} while (frame < timestep);
 
 		// calculate how close or far we are from the next timestep

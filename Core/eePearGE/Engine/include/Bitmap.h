@@ -1,4 +1,6 @@
-#pragma once
+#ifndef _EEPEARGE_BITMAP_H_
+#define _EEPEARGE_BITMAP_H_
+
 #include <SDL.h>
 #include <iostream>
 namespace eePearGE
@@ -19,3 +21,5 @@ namespace eePearGE
 		}
 	};
 }
+
+#endif

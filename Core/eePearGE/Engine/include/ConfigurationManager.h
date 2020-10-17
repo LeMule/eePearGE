@@ -1,6 +1,9 @@
-#pragma once
+#ifndef _EEPEARGE_CONFIGURATIONMANAGER_H_
+#define _EEPEARGE_CONFIGURATIONMANAGER_H_
+
 #include "tinyxml2.h"
 #include <string>
+#include <memory>
 namespace eePearGE
 {
 	class GameConfig
@@ -23,6 +26,8 @@ namespace eePearGE
 			return cfg;
 		}
 	};
+
+	//typedef std::shared_ptr<ConfigurationManager> ConfigurationManagerPtr;
 }
 
-
+#endif
