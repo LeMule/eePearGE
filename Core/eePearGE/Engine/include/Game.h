@@ -10,45 +10,39 @@ namespace eePearGE
 	class Game
 	{
 	public:
+		const int MONSTER_COUNT = 20;
 		Game(EventManagerPtr evtMngr);
 		~Game(){};
 
 		void Update();
 		void Render();
 
-		void DummyOnUpEvent();
-		void DummyOnDownEvent();
-		void DummyOnLeftEvent();
-		void DummyOnRightEvent();
+		//Movement Key Down
+		void OnUpPressedEvent();
+		void OnDownPressedEvent();
+		void OnLeftPressedEvent();
+		void OnRightPressedEvent();
+		
+		//Movement Key Up
+		void OnUpReleasedEvent();
+		void OnDownReleasedEvent();
+		void OnLeftReleasedEvent();
+		void OnRightReleasedEvent();
 
-		virtual void InitGame() 
-		{
-			SpritePtr _data = std::shared_ptr<Sprite>(new Sprite(20, 20));
-			for (int col = 1; col != 20; col++)
-			{
-				for (int row = 1; row != 20; row++)
-				{
-					if (rand() % 25)
-					{
-						_data->GetSpriteData()[col - 1.0][row - 1.0].r = static_cast<float>(rand() % 2);
-						_data->GetSpriteData()[col - 1.0][row - 1.0].g = static_cast<float>(rand() % 2);
-						_data->GetSpriteData()[col - 1.0][row - 1.0].b = static_cast<float>(rand() % 2);
-					}
-					else
-					{
-						_data->GetSpriteData()[col - 1.0][row - 1.0].r = static_cast<float>(0);
-						_data->GetSpriteData()[col - 1.0][row - 1.0].g = static_cast<float>(0);
-						_data->GetSpriteData()[col - 1.0][row - 1.0].b = static_cast<float>(0);
-					}
-				}
-			}
-			m_SpriteVec.push_back(_data);
-		};
+		void OnGoFastDown();
+		void OnGoFastUp();
+
+		Pear::Position RunMonsterAI(Pear::Position& monsterPosition, Pear::Position& playerPosition);
+		bool CheckCollision(Pear::Position& monsterPosition, Pear::Position& playerPosition);
+
+		virtual void InitGame();
 	private:
 		Game(const Game&);
 		Game();
 
 		std::vector<SpritePtr> m_SpriteVec;
+		std::pair<float, float> m_Velocity;
+		bool m_bGoFast;
 	};
 	//typedef std::shared_ptr<Game> GamePtr;
 }

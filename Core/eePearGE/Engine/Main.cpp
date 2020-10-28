@@ -6,17 +6,19 @@
 using namespace eePearGE;
 using namespace std::chrono_literals;
 // we use a fixed timestep of 1 / (60 fps) = 16 milliseconds
-constexpr std::chrono::nanoseconds timestep(100ms);
+constexpr std::chrono::nanoseconds timestep(16ms);
+//Control the Update with a refresh rate instead of relying on processor speeds.
+constexpr std::chrono::nanoseconds refresh_rate(1ms);
 std::unique_ptr<GameManager*> pGameManager;
 
 struct game_state
 {
-	// this contains the state of your game, such as positions and velocities
+	
 };
 
 bool handle_events(EventManagerPtr evtPtr)
 {
-	 //Handle events on queue
+	//Handle events on queue
 	SDL_Event e;
 	while (SDL_PollEvent(&e) != 0)
 	{
@@ -30,16 +32,40 @@ bool handle_events(EventManagerPtr evtPtr)
 			switch (e.key.keysym.sym)
 			{
 			case SDL_KeyCode::SDLK_UP:
-				evtPtr->QueueEvent("Up");
+				evtPtr->QueueEvent("UpPressed");
 				break;
 			case SDL_KeyCode::SDLK_DOWN:
-				evtPtr->QueueEvent("Down");
+				evtPtr->QueueEvent("DownPressed");
 				break;
 			case SDL_KeyCode::SDLK_LEFT:
-				evtPtr->QueueEvent("Left");
+				evtPtr->QueueEvent("LeftPressed");
 				break;
 			case SDL_KeyCode::SDLK_RIGHT:
-				evtPtr->QueueEvent("Right");
+				evtPtr->QueueEvent("RightPressed");
+				break;
+			case SDL_KeyCode::SDLK_d:
+				evtPtr->QueueEvent("GoFastDown");
+				break;
+			}
+		}
+		else if (e.type == SDL_KEYUP)
+		{
+			switch (e.key.keysym.sym)
+			{
+			case SDL_KeyCode::SDLK_UP:
+				evtPtr->QueueEvent("UpReleased");
+				break;
+			case SDL_KeyCode::SDLK_DOWN:
+				evtPtr->QueueEvent("DownReleased");
+				break;
+			case SDL_KeyCode::SDLK_LEFT:
+				evtPtr->QueueEvent("LeftReleased");
+				break;
+			case SDL_KeyCode::SDLK_RIGHT:
+				evtPtr->QueueEvent("RightReleased");
+				break;
+			case SDL_KeyCode::SDLK_d:
+				evtPtr->QueueEvent("GoFastUp");
 				break;
 			}
 		}
@@ -73,7 +99,8 @@ int main(int argc, char* args[])
 	using clock = std::chrono::high_resolution_clock;
 
 	std::chrono::nanoseconds frame(0ms);
-	std::chrono::nanoseconds frame_dur(33ms);
+	std::chrono::nanoseconds update_frame(0ms);
+
 	auto time_since_last_frame = clock::now();
 	bool quit_game = false;
 
@@ -94,9 +121,15 @@ int main(int argc, char* args[])
 			quit_game = handle_events(evtMngr);
 
 			frame += std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time);
+			update_frame += std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time);
 
 			previous_state = current_state;
-			update(&current_state, evtMngr);
+
+			if (update_frame >= refresh_rate)
+			{
+				update(&current_state, evtMngr);
+				update_frame = 0ms;
+			}
 
 		} while (frame < timestep);
 

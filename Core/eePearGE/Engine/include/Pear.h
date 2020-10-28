@@ -6,9 +6,10 @@ namespace eePearGE
 {
 	class Pear
 	{
-		typedef short int Coord;
-		typedef std::pair<Coord, Coord> Position;
 	public:
+		typedef float Coord;
+		typedef std::pair<Coord, Coord> Position;
+
 		//Basic Interface Me...
 		virtual void Update() = 0;
 		Position& GetPosition() { return position; }
